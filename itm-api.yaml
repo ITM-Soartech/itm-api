@@ -1,0 +1,800 @@
+---
+openapi: 3.0.2
+info:
+  title: ITM API
+  version: 0.1.0
+paths:
+  "/":
+    get:
+      summary: Get Index
+      operationId: get_index__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            text/html:
+              schema:
+                type: string
+  "/api/v1/new_session":
+    post:
+      summary: Post New Session Id
+      description: |-
+        Get unique session id for grouping answers from a collection of scenarios/probes
+        together when computing kdma values/alignment results.
+      operationId: post_new_session_id_api_v1_new_session_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                title: Response Post New Session Id Api V1 New Session Post
+                type: string
+  "/api/v1/alignment_target/{target_id}":
+    get:
+      summary: Get Alignment Target
+      description: |-
+        Retrieve alignment target.
+
+        Parameters
+        ----------
+        target_id: str
+            id of alignment target
+
+        Returns
+        ----------
+        tgt: AlignmentTarget object
+            json-compatible alignment target pydantic object with schema defined in ../schema/.
+      operationId: get_alignment_target_api_v1_alignment_target__target_id__get
+      parameters:
+      - required: true
+        schema:
+          title: Target Id
+          type: string
+        name: target_id
+        in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/AlignmentTarget"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/api/v1/scenario/{scenario_id}/":
+    get:
+      summary: Get Scenario
+      description: |-
+        Retrieve scenario.
+
+        Parameters
+        -----------
+        scenario_id: str, required
+            id of scenario
+
+        Returns
+        ------------
+        scenario: Scenario object
+            json-compatible scenario pydantic object with schema defined in ../schema/.
+      operationId: get_scenario_api_v1_scenario__scenario_id___get
+      parameters:
+      - required: true
+        schema:
+          title: Scenario Id
+          type: string
+        name: scenario_id
+        in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Scenario"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/api/v1/response/":
+    post:
+      summary: Post Probe Response
+      description: |-
+        Send probe response to be stored in database.
+
+        Parameters
+        ----------
+        response: ProbeResponse object (defined in pydantic schema)
+            Contains session id, probe id, response id
+
+        Returns
+        -----------
+        None
+      operationId: post_probe_response_api_v1_response__post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ProbeResponse"
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/api/v1/responses/":
+    post:
+      summary: Post Probe Responses
+      description: |-
+        Send collection of probe responses to be stored in database.
+
+        Parameters
+        ----------
+        session_id: str
+            unique id for user session
+        probe_ids: List[str]:
+            list of id's corresponding to probes
+        response_ids: List[str]
+            list of id's corresponding to responses
+
+        Returns
+        -----------
+        None
+      operationId: post_probe_responses_api_v1_responses__post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ProbeResponseBatch"
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/api/v1/alignment/probe":
+    get:
+      summary: Get Probe Response Alignment
+      description: Get probe-level alignment
+      operationId: get_probe_response_alignment_api_v1_alignment_probe_get
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/AlignmentRequest"
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/AlignmentResults"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/api/v1/alignment/session":
+    get:
+      summary: Get Session Alignment
+      description: Get alignment for all probe responses in a session.
+      operationId: get_session_alignment_api_v1_alignment_session_get
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/AlignmentRequest"
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/AlignmentResults"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/api/v1/":
+    get:
+      summary: Get Api
+      description: |-
+        Return API version, can be used to check connection.
+
+        Parameters
+        -----------
+        None
+
+        Returns
+        --------
+        version: dict
+            key (str): 'api_version', value (str): version string
+      operationId: get_api_api_v1__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  "/api/v1/kdmas":
+    get:
+      summary: Get Kdmas
+      description: |-
+        get list of KDMA names used.
+
+        Parameters
+        -----------
+        None
+
+        Returns
+        ----------
+        kdmas: list[str]
+            list of names of all KDMA's.
+      operationId: get_kdmas_api_v1_kdmas_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                title: Response Get Kdmas Api V1 Kdmas Get
+                type: array
+                items:
+                  type: string
+components:
+  schemas:
+    AlignmentRequest:
+      title: AlignmentRequest
+      required:
+      - session_id
+      - target_id
+      type: object
+      properties:
+        session_id:
+          title: Session Id
+          type: string
+          description: Unique ID for user session.
+        scenario_id:
+          title: Scenario Id
+          type: string
+          description: Unique ID for scenario. If null, alignment is computed for
+            entire session.
+        probe_id:
+          title: Probe Id
+          type: string
+          description: ID of single probe to compute alignment for. If null, alignment
+            is computed for the entire user session.
+        target_id:
+          title: Target Id
+          type: string
+          description: Unique ID for alignment target.
+      description: Information sent to request alignment data
+    AlignmentResults:
+      title: AlignmentResults
+      required:
+      - alignment_source
+      - alignment_target_id
+      - score
+      - kdma_values
+      type: object
+      properties:
+        alignment_source:
+          title: Alignment Source
+          type: array
+          items:
+            "$ref": "#/components/schemas/AlignmentSource"
+        alignment_target_id:
+          title: Alignment Target Id
+          type: string
+          description: ID of desired profile to align responses to.
+        score:
+          title: Score
+          maximum: 1
+          minimum: 0
+          type: number
+          desc: Measured alignment, 0 (completely unaligned) - 1 (completely aligned).
+        kdma_values:
+          title: Kdma Values
+          type: array
+          items:
+            "$ref": "#/components/schemas/KDMA"
+          description: Computed KDMA profile from results
+      description: Computed KDMA profile and alignment score for a set of decisions.
+    AlignmentSource:
+      title: AlignmentSource
+      required:
+      - scenario_id
+      - probes
+      type: object
+      properties:
+        scenario_id:
+          title: Scenario Id
+          type: string
+          description: Unique ID for user session.
+        probes:
+          title: Probes
+          type: array
+          items:
+            type: string
+          description: List of ID's of probes used to compute alignment.
+      description: |-
+        Describes which session/probe responses were used to
+        compute an alignment score, allowing for lots
+        of flexibility.
+    AlignmentTarget:
+      title: AlignmentTarget
+      required:
+      - id
+      - kdma_values
+      type: object
+      properties:
+        id:
+          title: Id
+          type: string
+          description: Globally unique ID for profile
+        kdma_values:
+          title: Kdma Values
+          type: array
+          items:
+            "$ref": "#/components/schemas/KDMA"
+      description: Desired profile of KDMA values for an algorithmic decision maker
+        to align to.
+    Casualty:
+      title: Casualty
+      required:
+      - id
+      - unstructured
+      - demographics
+      - vitals
+      type: object
+      properties:
+        id:
+          title: Id
+          type: string
+          description: Globally unique casualty identifier
+        unstructured:
+          title: Unstructured
+          type: string
+          description: Text description of casualty/injuries.
+        demographics:
+          "$ref": "#/components/schemas/DemographicInfo"
+        vitals:
+          "$ref": "#/components/schemas/IndividualVitals"
+      description: Collection of information about an individual casualty.
+    DemographicInfo:
+      title: DemographicInfo
+      required:
+      - age
+      - sex
+      - rank
+      type: object
+      properties:
+        age:
+          title: Age
+          type: integer
+          description: Age in years.
+        sex:
+          "$ref": "#/components/schemas/IndividualSex"
+        rank:
+          "$ref": "#/components/schemas/IndividualRank"
+      description: Demographic information about an individual.
+    Environment:
+      title: Environment
+      required:
+      - unstructured
+      - aidDelay
+      type: object
+      properties:
+        unstructured:
+          title: Unstructured
+          type: string
+          description: Text description of environment.
+        aidDelay:
+          title: Aiddelay
+          minimum: 0
+          type: number
+          description: Time in minutes until evac, reinforcements, extra supplydelivery,
+            etc.
+      description: Information about location, environment, etc.
+    HTTPValidationError:
+      title: HTTPValidationError
+      type: object
+      properties:
+        detail:
+          title: Detail
+          type: array
+          items:
+            "$ref": "#/components/schemas/ValidationError"
+    IndividualRank:
+      title: IndividualRank
+      enum:
+      - Civillian
+      - Military
+      - VIP
+      type: string
+      description: Describes an individual's rank or importance to a given mission.
+    IndividualSex:
+      title: IndividualSex
+      enum:
+      - M
+      - F
+      type: string
+      description: Sex of individual assigned at birth.
+    IndividualVitals:
+      title: IndividualVitals
+      type: object
+      properties:
+        hrpmin:
+          title: Hrpmin
+          minimum: 0
+          type: integer
+          description: heart rate, beats per minute
+        mmHg:
+          title: Mmhg
+          minimum: 0
+          type: integer
+          description: blood pressure, mmHg
+        Spo2:
+          title: Spo2
+          minimum: 0
+          type: integer
+          description: Blood oxygen percent
+        RR:
+          title: Rr
+          minimum: 0
+          type: integer
+          description: Respiration rate, breaths/min
+        Pain:
+          title: Pain
+          maximum: 10
+          minimum: 0
+          type: integer
+          description: Pain, 0 (no pain) - 10 (max pain)
+      description: |-
+        Vitals for an individual determined from Triage. Fields are optional as it
+        might not be possible to always collect this information.
+    KDMA:
+      title: KDMA
+      required:
+      - kdma
+      - value
+      type: object
+      properties:
+        kdma:
+          "$ref": "#/components/schemas/KDMA_name"
+        value:
+          title: Value
+          maximum: 10
+          minimum: 0
+          type: number
+      description: Single KDMA value with values between 0 and 10
+    KDMA_name:
+      title: KDMA_name
+      enum:
+      - denial
+      - mission
+      type: string
+      description: Possible KDMA names.
+    Mission:
+      title: Mission
+      required:
+      - unstructured
+      - mission_type
+      type: object
+      properties:
+        unstructured:
+          title: Unstructured
+          type: string
+          description: Text description of state.
+        mission_type:
+          allOf:
+          - "$ref": "#/components/schemas/MissionType"
+          description: Mission objective
+      description: Text description of mission, and enum mission type.
+    MissionType:
+      title: MissionType
+      enum:
+      - ProtectMVP
+      - DeliverCargo
+      - DefendBase
+      - Other
+      type: string
+      description: Enumeration over different mission objectives.
+    Probe:
+      title: Probe
+      required:
+      - id
+      - type
+      - prompt
+      - state
+      - options
+      type: object
+      properties:
+        id:
+          title: Id
+          type: string
+          description: Globally unique probe ID
+        type:
+          "$ref": "#/components/schemas/ProbeType"
+        prompt:
+          title: Prompt
+          type: string
+          description: Question being asked to decision maker during probe.
+        state:
+          title: State
+          anyOf:
+          - "$ref": "#/components/schemas/State"
+          - type: object
+        options:
+          title: Options
+          type: array
+          items:
+            "$ref": "#/components/schemas/ProbeChoice"
+      description: Individual prompt that a decision maker must respond to.
+    ProbeChoice:
+      title: ProbeChoice
+      required:
+      - id
+      - value
+      type: object
+      properties:
+        id:
+          title: Id
+          type: string
+          description: Globally unique ID for choice
+        value:
+          title: Value
+          type: string
+          description: Text description of decision.
+    ProbeResponse:
+      title: ProbeResponse
+      required:
+      - session_id
+      - scenario_id
+      - probe_id
+      - choice
+      type: object
+      properties:
+        session_id:
+          title: Session Id
+          type: string
+          description: Unique ID for user session.
+        scenario_id:
+          title: Scenario Id
+          type: string
+          description: Unique ID for scenario.
+        probe_id:
+          title: Probe Id
+          type: string
+          description: ID of probe that response is for
+        choice:
+          title: Choice
+          type: string
+          description: string ID of choice made, or, for ordering problems, comma-separated
+            string ofid's of ordered choices.
+        justification:
+          title: Justification
+          type: string
+          description: Optional free text justification of response to provide additional
+            context.
+      description: Response to an individual probe.
+    ProbeResponseBatch:
+      title: ProbeResponseBatch
+      required:
+      - session_id
+      - scenario_ids
+      - probe_ids
+      - choices
+      type: object
+      properties:
+        session_id:
+          title: Session Id
+          type: string
+          description: Unique ID for user session.
+        scenario_ids:
+          title: Scenario Ids
+          type: array
+          items:
+            type: string
+          description: string IDs of scenario that response is for
+        probe_ids:
+          title: Probe Ids
+          type: array
+          items:
+            type: string
+          description: string IDs of probe that response is for
+        choices:
+          title: Choices
+          type: array
+          items:
+            type: string
+          description: string IDs of choice made, or, for ordering problems, comma-separated
+            string ofid's of ordered choices.
+      description: Response to multiple probes sent together.
+    ProbeType:
+      title: ProbeType
+      enum:
+      - MultipleChoice
+      - PatientOrdering
+      type: string
+      description: Describes the type of probe being asked (multiple choice, patient
+        ordering, etc)
+    Scenario:
+      title: Scenario
+      required:
+      - id
+      - state
+      - probes
+      type: object
+      properties:
+        name:
+          title: Name
+          type: string
+          description: Human-readable scenario name, not necessarily unique
+        id:
+          title: Id
+          type: string
+          description: globally unique id for scenario
+        state:
+          "$ref": "#/components/schemas/State"
+        probes:
+          title: Probes
+          type: array
+          items:
+            "$ref": "#/components/schemas/Probe"
+      description: Fixed information about a scenario
+    State:
+      title: State
+      required:
+      - unstructured
+      - mission
+      - environment
+      - threat_state
+      - supplies
+      - casualties
+      type: object
+      properties:
+        unstructured:
+          title: Unstructured
+          type: string
+          description: Text description of state
+        mission:
+          "$ref": "#/components/schemas/Mission"
+        environment:
+          "$ref": "#/components/schemas/Environment"
+        threat_state:
+          "$ref": "#/components/schemas/ThreatState"
+        supplies:
+          title: Supplies
+          type: array
+          items:
+            "$ref": "#/components/schemas/Supply"
+        casualties:
+          title: Casualties
+          type: array
+          items:
+            "$ref": "#/components/schemas/Casualty"
+      description: |-
+        Describes current state of scenario, "including casualties, supplies,
+        environmental info, etc.
+    Supply:
+      title: Supply
+      required:
+      - type
+      - quantity
+      type: object
+      properties:
+        type:
+          "$ref": "#/components/schemas/SupplyType"
+        quantity:
+          title: Quantity
+          minimum: 0
+          type: integer
+          description: Quantity (count) of supply.
+      description: Type and quantity of currently available supplies.
+    SupplyType:
+      title: SupplyType
+      enum:
+      - IV kits
+      - Bags of Saline
+      - Fast Kit
+      - Junctional Tourniquets
+      - Combat Gauze
+      - CAT Tourniquets
+      - Pressure Dressings
+      - Bulky Dressings
+      - Over the Needle Catheters
+      - Vented Chest Seals
+      - Non-Vented Chest Seals
+      - Nasal Trumpet
+      - Oropharangeal-Airway
+      - Cric Kit
+      - Alcohol Swabs
+      type: string
+      description: Enum over possible supply types.
+    Threat:
+      title: Threat
+      required:
+      - threat_type
+      - severity
+      type: object
+      properties:
+        threat_type:
+          "$ref": "#/components/schemas/ThreatType"
+        severity:
+          title: Severity
+          maximum: 1
+          minimum: 0
+          type: number
+          description: Severity of threat, 0 (no threat) - 1 (max threat)
+      description: Type and severity of threat.
+    ThreatState:
+      title: ThreatState
+      required:
+      - unstructured
+      - threats
+      type: object
+      properties:
+        unstructured:
+          title: Unstructured
+          type: string
+          description: Text description of current threats.
+        threats:
+          title: Threats
+          type: array
+          items:
+            "$ref": "#/components/schemas/Threat"
+      description: Text description of threats, and list of individual threats.
+    ThreatType:
+      title: ThreatType
+      enum:
+      - gunshots
+      - shelling
+      type: string
+      description: Enum over different possible types of threats.
+    ValidationError:
+      title: ValidationError
+      required:
+      - loc
+      - msg
+      - type
+      type: object
+      properties:
+        loc:
+          title: Location
+          type: array
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
