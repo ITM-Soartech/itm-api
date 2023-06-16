@@ -66,7 +66,7 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/HTTPValidationError"
-  "/api/v1/scenario/{scenario_id}/":
+  "/api/v1/scenario/{scenario_id}":
     get:
       summary: Get Scenario
       description: |-
@@ -102,7 +102,7 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/HTTPValidationError"
-  "/api/v1/response/":
+  "/api/v1/response":
     post:
       summary: Post Probe Response
       description: |-
@@ -135,7 +135,7 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/HTTPValidationError"
-  "/api/v1/responses/":
+  "/api/v1/responses":
     post:
       summary: Post Probe Responses
       description: |-
@@ -220,7 +220,7 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/HTTPValidationError"
-  "/api/v1/":
+  "/api/v1":
     get:
       summary: Get Api
       description: |-
