@@ -181,7 +181,7 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/AlignmentRequest"
+              "$ref": "#/components/schemas/ProbeAlignmentRequest"
         required: true
       responses:
         '200':
@@ -273,6 +273,24 @@ components:
       required:
       - session_id
       - target_id
+      type: object
+      properties:
+        session_id:
+          title: Session Id
+          type: string
+          description: Unique ID for user session.
+        target_id:
+          title: Target Id
+          type: string
+          description: Unique ID for alignment target.
+      description: Information sent to request alignment data
+    ProbeAlignmentRequest:
+      title: AlignmentRequest
+      required:
+      - session_id
+      - target_id
+      - scenario_id
+      - probe_id
       type: object
       properties:
         session_id:
