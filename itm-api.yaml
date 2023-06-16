@@ -4,17 +4,6 @@ info:
   title: ITM API
   version: 0.1.0
 paths:
-  "/":
-    get:
-      summary: Get Index
-      operationId: get_index__get
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            text/html:
-              schema:
-                type: string
   "/api/v1/new_session":
     post:
       summary: Post New Session Id
