@@ -571,19 +571,14 @@ components:
           title: Value
           type: string
           description: Text description of decision.
-    ProbeResponse:
-      title: ProbeResponse
+    Response:
+      title: Response
       required:
-      - session_id
       - scenario_id
       - probe_id
       - choice
       type: object
       properties:
-        session_id:
-          title: Session Id
-          type: string
-          description: Unique ID for user session.
         scenario_id:
           title: Scenario Id
           type: string
@@ -603,38 +598,37 @@ components:
           description: Optional free text justification of response to provide additional
             context.
       description: Response to an individual probe.
-    ProbeResponseBatch:
-      title: ProbeResponseBatch
+    ProbeResponse:
+      title: ProbeResponse
       required:
       - session_id
-      - scenario_ids
-      - probe_ids
-      - choices
+      - response
       type: object
       properties:
         session_id:
           title: Session Id
           type: string
           description: Unique ID for user session.
-        scenario_ids:
-          title: Scenario Ids
+        response:
+          "$ref": "#/components/schemas/Response"
+      description: Response to multiple probes sent together.
+    ProbeResponseBatch:
+      title: ProbeResponseBatch
+      required:
+      - session_id
+      - responses
+      type: object
+      properties:
+        session_id:
+          title: Session Id
+          type: string
+          description: Unique ID for user session.
+        responses:
+          title: Responses
           type: array
           items:
-            type: string
+            "$ref": "#/components/schemas/Response"
           description: string IDs of scenario that response is for
-        probe_ids:
-          title: Probe Ids
-          type: array
-          items:
-            type: string
-          description: string IDs of probe that response is for
-        choices:
-          title: Choices
-          type: array
-          items:
-            type: string
-          description: string IDs of choice made, or, for ordering problems, comma-separated
-            string ofid's of ordered choices.
       description: Response to multiple probes sent together.
     ProbeType:
       title: ProbeType
