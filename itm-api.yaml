@@ -166,12 +166,31 @@ paths:
       summary: Get Probe Response Alignment
       description: Get probe-level alignment
       operationId: get_probe_response_alignment_api_v1_alignment_probe_get
-      requestBody:
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/ProbeAlignmentRequest"
-        required: true
+      parameters:
+        - in: query
+          name: session_id
+          schema:
+            type: string
+          description: Session ID
+          required: true
+        - in: query
+          name: target_id
+          schema:
+            type: string
+          description: Alignment Target ID
+          required: true
+        - in: query
+          name: scenario_id
+          schema:
+            type: string
+          description: Scenario ID
+          required: true
+        - in: query
+          name: probe_id
+          schema:
+            type: string
+          description: Probe ID
+          required: true
       responses:
         '200':
           description: Successful Response
@@ -190,12 +209,19 @@ paths:
       summary: Get Session Alignment
       description: Get alignment for all probe responses in a session.
       operationId: get_session_alignment_api_v1_alignment_session_get
-      requestBody:
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/AlignmentRequest"
-        required: true
+      parameters:
+        - in: query
+          name: session_id
+          schema:
+            type: string
+          description: Session ID
+          required: true
+        - in: query
+          name: target_id
+          schema:
+            type: string
+          description: Alignment Target ID
+          required: true
       responses:
         '200':
           description: Successful Response
@@ -232,50 +258,6 @@ paths:
               schema: {}
 components:
   schemas:
-    AlignmentRequest:
-      title: AlignmentRequest
-      required:
-      - session_id
-      - target_id
-      type: object
-      properties:
-        session_id:
-          title: Session Id
-          type: string
-          description: Unique ID for user session.
-        target_id:
-          title: Target Id
-          type: string
-          description: Unique ID for alignment target.
-      description: Information sent to request alignment data
-    ProbeAlignmentRequest:
-      title: AlignmentRequest
-      required:
-      - session_id
-      - target_id
-      - scenario_id
-      - probe_id
-      type: object
-      properties:
-        session_id:
-          title: Session Id
-          type: string
-          description: Unique ID for user session.
-        scenario_id:
-          title: Scenario Id
-          type: string
-          description: Unique ID for scenario. If null, alignment is computed for
-            entire session.
-        probe_id:
-          title: Probe Id
-          type: string
-          description: ID of single probe to compute alignment for. If null, alignment
-            is computed for the entire user session.
-        target_id:
-          title: Target Id
-          type: string
-          description: Unique ID for alignment target.
-      description: Information sent to request alignment data
     AlignmentResults:
       title: AlignmentResults
       required:
