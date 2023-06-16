@@ -299,7 +299,7 @@ components:
           maximum: 1
           minimum: 0
           type: number
-          desc: Measured alignment, 0 (completely unaligned) - 1 (completely aligned).
+          description: Measured alignment, 0 (completely unaligned) - 1 (completely aligned).
         kdma_values:
           title: Kdma Values
           type: array
