@@ -230,31 +230,6 @@ paths:
           content:
             application/json:
               schema: {}
-  "/api/v1/kdmas":
-    get:
-      summary: Get Kdmas
-      description: |-
-        get list of KDMA names used.
-
-        Parameters
-        -----------
-        None
-
-        Returns
-        ----------
-        kdmas: list[str]
-            list of names of all KDMA's.
-      operationId: get_kdmas_api_v1_kdmas_get
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                title: Response Get Kdmas Api V1 Kdmas Get
-                type: array
-                items:
-                  type: string
 components:
   schemas:
     AlignmentRequest:
