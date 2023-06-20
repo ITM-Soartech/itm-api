@@ -397,7 +397,7 @@ components:
     IndividualRank:
       title: IndividualRank
       enum:
-      - Civillian
+      - Civilian
       - Military
       - VIP
       type: string
@@ -462,6 +462,7 @@ components:
       enum:
       - denial
       - mission
+      - Knowledge
       type: string
       description: Possible KDMA names.
     Mission:
@@ -486,6 +487,7 @@ components:
       - ProtectMVP
       - DeliverCargo
       - DefendBase
+      - ProtectCivilians
       - Other
       type: string
       description: Enumeration over different mission objectives.
@@ -598,6 +600,7 @@ components:
       title: ProbeType
       enum:
       - MultipleChoice
+      - FreeResponse
       - PatientOrdering
       type: string
       description: Describes the type of probe being asked (multiple choice, patient
