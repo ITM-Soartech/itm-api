@@ -167,30 +167,30 @@ paths:
       description: Get probe-level alignment
       operationId: get_probe_response_alignment_api_v1_alignment_probe_get
       parameters:
-        - in: query
-          name: session_id
-          schema:
-            type: string
-          description: Session ID
-          required: true
-        - in: query
-          name: target_id
-          schema:
-            type: string
-          description: Alignment Target ID
-          required: true
-        - in: query
-          name: scenario_id
-          schema:
-            type: string
-          description: Scenario ID
-          required: true
-        - in: query
-          name: probe_id
-          schema:
-            type: string
-          description: Probe ID
-          required: true
+      - required: true
+        schema:
+          title: Session Id
+          type: string
+        name: session_id
+        in: query
+      - required: true
+        schema:
+          title: Target Id
+          type: string
+        name: target_id
+        in: query
+      - required: true
+        schema:
+          title: Scenario Id
+          type: string
+        name: scenario_id
+        in: query
+      - required: true
+        schema:
+          title: Probe Id
+          type: string
+        name: probe_id
+        in: query
       responses:
         '200':
           description: Successful Response
@@ -210,18 +210,18 @@ paths:
       description: Get alignment for all probe responses in a session.
       operationId: get_session_alignment_api_v1_alignment_session_get
       parameters:
-        - in: query
-          name: session_id
-          schema:
-            type: string
-          description: Session ID
-          required: true
-        - in: query
-          name: target_id
-          schema:
-            type: string
-          description: Alignment Target ID
-          required: true
+      - required: true
+        schema:
+          title: Session Id
+          type: string
+        name: session_id
+        in: query
+      - required: true
+        schema:
+          title: Target Id
+          type: string
+        name: target_id
+        in: query
       responses:
         '200':
           description: Successful Response
