@@ -1,10 +1,13 @@
 # ITM API Specification
 
+![image](https://github.com/ITM-Soartech/itm-api/assets/136823353/b9e62182-a0c8-40b5-b6bb-48622f339a84)
+
 
 ## Links
 
   - **Documentation**: https://itm-soartech.github.io/itm-api/
   - **OpenAPI3 File**: https://raw.githubusercontent.com/ITM-Soartech/itm-api/master/itm-api.yaml
+
 
 ## Running Locally
 
