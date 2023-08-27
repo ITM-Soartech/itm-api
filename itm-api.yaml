@@ -602,6 +602,8 @@ components:
       - MultipleChoice
       - FreeResponse
       - PatientOrdering
+      - SelectTag
+      - SelectTreatment
       type: string
       description: Describes the type of probe being asked (multiple choice, patient
         ordering, etc)
