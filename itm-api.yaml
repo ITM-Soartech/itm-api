@@ -698,6 +698,10 @@ components:
       - Oropharangeal-Airway
       - Cric Kit
       - Alcohol Swabs
+      - Hemostatic Gauze
+      - Needle Decompression
+      - Bandage
+      - Pain Medication
       type: string
       description: Enum over possible supply types.
     Threat:
