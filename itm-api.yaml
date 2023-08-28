@@ -462,6 +462,8 @@ components:
       enum:
       - denial
       - mission
+      - timeurg
+      - risktol
       - Knowledge
       type: string
       description: Possible KDMA names.
