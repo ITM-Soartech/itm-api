@@ -462,6 +462,8 @@ components:
       enum:
       - denial
       - mission
+      - timeurg
+      - risktol
       - Knowledge
       type: string
       description: Possible KDMA names.
@@ -602,6 +604,8 @@ components:
       - MultipleChoice
       - FreeResponse
       - PatientOrdering
+      - SelectTag
+      - SelectTreatment
       type: string
       description: Describes the type of probe being asked (multiple choice, patient
         ordering, etc)
@@ -696,6 +700,10 @@ components:
       - Oropharangeal-Airway
       - Cric Kit
       - Alcohol Swabs
+      - Hemostatic Gauze
+      - Needle Decompression
+      - Bandage
+      - Pain Medication
       type: string
       description: Enum over possible supply types.
     Threat:
