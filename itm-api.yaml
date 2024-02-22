@@ -1,9 +1,33 @@
 ---
-openapi: 3.0.2
+openapi: 3.1.0
 info:
   title: ITM API
-  version: 0.1.0
+  version: 0.2.0
 paths:
+  "/":
+    get:
+      summary: Get Index
+      description: Default home page
+      operationId: get_index__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            text/html:
+              schema:
+                type: string
+  "/demo":
+    get:
+      summary: Get Index
+      description: API Demo page
+      operationId: get_index_demo_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            text/html:
+              schema:
+                type: string
   "/api/v1/new_session":
     post:
       summary: Post New Session Id
@@ -11,37 +35,40 @@ paths:
         Get unique session id for grouping answers from a collection of scenarios/probes
         together when computing kdma values/alignment results.
       operationId: post_new_session_id_api_v1_new_session_post
+      parameters:
+      - name: user_id
+        in: query
+        required: false
+        schema:
+          type: string
+          default: default_user
+          title: User Id
       responses:
-        '200':
+        '201':
           description: Successful Response
           content:
             application/json:
               schema:
-                title: Response Post New Session Id Api V1 New Session Post
                 type: string
+                title: Response Post New Session Id Api V1 New Session Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
   "/api/v1/alignment_target/{target_id}":
     get:
       summary: Get Alignment Target
-      description: |-
-        Retrieve alignment target.
-
-        Parameters
-        ----------
-        target_id: str
-            id of alignment target
-
-        Returns
-        ----------
-        tgt: AlignmentTarget object
-            json-compatible alignment target pydantic object with schema defined in ../schema/.
+      description: Retrieve alignment target.
       operationId: get_alignment_target_api_v1_alignment_target__target_id__get
       parameters:
-      - required: true
-        schema:
-          title: Target Id
-          type: string
-        name: target_id
+      - name: target_id
         in: path
+        required: true
+        schema:
+          type: string
+          title: Target Id
       responses:
         '200':
           description: Successful Response
@@ -49,6 +76,8 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/AlignmentTarget"
+        '404':
+          description: Not Found
         '422':
           description: Validation Error
           content:
@@ -58,26 +87,15 @@ paths:
   "/api/v1/scenario/{scenario_id}":
     get:
       summary: Get Scenario
-      description: |-
-        Retrieve scenario.
-
-        Parameters
-        -----------
-        scenario_id: str, required
-            id of scenario
-
-        Returns
-        ------------
-        scenario: Scenario object
-            json-compatible scenario pydantic object with schema defined in ../schema/.
-      operationId: get_scenario_api_v1_scenario__scenario_id___get
+      description: Retrieve scenario data.
+      operationId: get_scenario_api_v1_scenario__scenario_id__get
       parameters:
-      - required: true
-        schema:
-          title: Scenario Id
-          type: string
-        name: scenario_id
+      - name: scenario_id
         in: path
+        required: true
+        schema:
+          type: string
+          title: Scenario Id
       responses:
         '200':
           description: Successful Response
@@ -85,27 +103,49 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/Scenario"
+        '404':
+          description: Not Found
         '422':
           description: Validation Error
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/HTTPValidationError"
+  "/api/v1/scenarios":
+    get:
+      summary: List Scenarios
+      description: Return list of available scenario id's.
+      operationId: list_scenarios_api_v1_scenarios_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  type: string
+                type: array
+                title: Response List Scenarios Api V1 Scenarios Get
+  "/api/v1/alignment_targets":
+    get:
+      summary: List Alignment Targets
+      description: Return list of available alignment targets
+      operationId: list_alignment_targets_api_v1_alignment_targets_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  type: string
+                type: array
+                title: Response List Alignment Targets Api V1 Alignment Targets Get
   "/api/v1/response":
     post:
       summary: Post Probe Response
-      description: |-
-        Send probe response to be stored in database.
-
-        Parameters
-        ----------
-        response: ProbeResponse object (defined in pydantic schema)
-            Contains session id, probe id, response id
-
-        Returns
-        -----------
-        None
-      operationId: post_probe_response_api_v1_response__post
+      description: Send probe response to be stored in database.
+      operationId: post_probe_response_api_v1_response_post
       requestBody:
         content:
           application/json:
@@ -113,48 +153,46 @@ paths:
               "$ref": "#/components/schemas/ProbeResponse"
         required: true
       responses:
-        '200':
+        '201':
           description: Successful Response
           content:
             application/json:
               schema: {}
+        '409':
+          description: Conflict
+          detail: probe data already found
         '422':
           description: Validation Error
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/HTTPValidationError"
-  "/api/v1/responses":
-    post:
-      summary: Post Probe Responses
-      description: |-
-        Send collection of probe responses to be stored in database.
-
-        Parameters
-        ----------
-        session_id: str
-            unique id for user session
-        probe_ids: List[str]:
-            list of id's corresponding to probes
-        response_ids: List[str]
-            list of id's corresponding to responses
-
-        Returns
-        -----------
-        None
-      operationId: post_probe_responses_api_v1_responses__post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/ProbeResponseBatch"
+  "/api/v1/alignment/session":
+    get:
+      summary: Get Probe Response Alignment
+      description: "Compute session alignment.\n\nAlignment is computed from all responses
+        given for the current session \neven if the scenario is partially complete"
+      operationId: get_probe_response_alignment_api_v1_alignment_session_get
+      parameters:
+      - name: session_id
+        in: query
         required: true
+        schema:
+          type: string
+          title: Session Id
+      - name: target_id
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Target Id
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                "$ref": "#/components/schemas/AlignmentResults"
         '422':
           description: Validation Error
           content:
@@ -164,33 +202,33 @@ paths:
   "/api/v1/alignment/probe":
     get:
       summary: Get Probe Response Alignment
-      description: Get probe-level alignment
+      description: Compute the alignment for a single probe response
       operationId: get_probe_response_alignment_api_v1_alignment_probe_get
       parameters:
-      - required: true
+      - name: session_id
+        in: query
+        required: true
         schema:
+          type: string
           title: Session Id
-          type: string
-        name: session_id
+      - name: target_id
         in: query
-      - required: true
+        required: true
         schema:
+          type: string
           title: Target Id
-          type: string
-        name: target_id
+      - name: scenario_id
         in: query
-      - required: true
+        required: true
         schema:
+          type: string
           title: Scenario Id
-          type: string
-        name: scenario_id
+      - name: probe_id
         in: query
-      - required: true
+        required: true
         schema:
+          type: string
           title: Probe Id
-          type: string
-        name: probe_id
-        in: query
       responses:
         '200':
           description: Successful Response
@@ -204,558 +242,1732 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/HTTPValidationError"
-  "/api/v1/alignment/session":
+  "/api/v1/session-data":
     get:
-      summary: Get Session Alignment
-      description: Get alignment for all probe responses in a session.
-      operationId: get_session_alignment_api_v1_alignment_session_get
+      summary: Get Session Data
+      operationId: get_session_data_api_v1_session_data_get
       parameters:
-      - required: true
+      - name: session_id
+        in: query
+        required: true
         schema:
+          type: string
           title: Session Id
-          type: string
-        name: session_id
-        in: query
-      - required: true
-        schema:
-          title: Target Id
-          type: string
-        name: target_id
-        in: query
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/AlignmentResults"
+                type: array
+                items:
+                  "$ref": "#/components/schemas/ProbeResponse"
+                title: Response Get Session Data Api V1 Session Data Get
+        '404':
+          description: Not Found
         '422':
           description: Validation Error
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/HTTPValidationError"
-  "/api/v1":
-    get:
-      summary: Get Api
-      description: |-
-        Return API version, can be used to check connection.
-
-        Parameters
-        -----------
-        None
-
-        Returns
-        --------
-        version: dict
-            key (str): 'api_version', value (str): version string
-      operationId: get_api_api_v1__get
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
 components:
   schemas:
+    ActionMapping:
+      properties:
+        action_id:
+          type: string
+          title: Action Id
+          description: A unique action ID within the scenario
+        action_type:
+          "$ref": "#/components/schemas/ActionTypeEnum"
+        unstructured:
+          type: string
+          title: Unstructured
+          description: Natural language, plain text description of the action
+        repeatable:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Repeatable
+          description: Whether or not this action should remain after it's selected
+            by an ADM
+          default: false
+        character_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Character Id
+          description: The ID of the character being acted upon
+        parameters:
+          anyOf:
+          - additionalProperties:
+              type: string
+            type: object
+          - type: 'null'
+          title: Parameters
+          description: key-value pairs containing additional [action-specific parameters](https://github.com/NextCenturyCorporation/itm-evaluation-client?tab=readme-ov-file#available-actions)
+        probe_id:
+          type: string
+          title: Probe Id
+          description: A valid probe_id from the appropriate TA1
+        choice:
+          type: string
+          title: Choice
+          description: A valid choice for the specified probe_id
+        next_scene:
+          anyOf:
+          - type: integer
+            minimum: 0
+          - type: 'null'
+          title: Next Scene
+          description: The next scene in the scenario, by index
+        kdma_association:
+          anyOf:
+          - additionalProperties:
+              anyOf:
+              - type: number
+                maximum: 1
+                minimum: 0
+              - type: integer
+                maximum: 1
+                minimum: 0
+            type: object
+          - type: 'null'
+          title: Kdma Association
+          description: KDMA associations for this choice, if provided by TA1
+        condition_semantics:
+          anyOf:
+          - "$ref": "#/components/schemas/SemanticTypeEnum"
+          - type: 'null'
+        conditions:
+          anyOf:
+          - "$ref": "#/components/schemas/Conditions"
+          - type: 'null'
+      type: object
+      required:
+      - action_id
+      - action_type
+      - unstructured
+      - probe_id
+      - choice
+      title: ActionMapping
+      description: Details for how a given action maps to a probe response
+    ActionTypeEnum:
+      type: string
+      enum:
+      - APPLY_TREATMENT
+      - CHECK_ALL_VITALS
+      - CHECK_PULSE
+      - CHECK_RESPIRATION
+      - DIRECT_MOBILE_CHARACTERS
+      - END_SCENE
+      - MOVE_TO_EVAC
+      - SEARCH
+      - SITREP
+      - TAG_CHARACTER
+      title: ActionTypeEnum
+      description: An action type [recognized by the ADM Server](https://github.com/NextCenturyCorporation/itm-evaluation-client?tab=readme-ov-file#available-actions)
+    AidDelay:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: An identifier for the evacuation opportunity, unique within
+            the scene
+        delay:
+          anyOf:
+          - type: number
+            minimum: 1
+          - type: integer
+            minimum: 1
+          title: Delay
+          description: CASEVAC or MEDEVAC timer, in minutes
+        type:
+          anyOf:
+          - "$ref": "#/components/schemas/AidTypeEnum"
+          - type: 'null'
+        max_transport:
+          anyOf:
+          - type: integer
+            minimum: 1
+          - type: 'null'
+          title: Max Transport
+          description: Maximum number of casualties that can be transported
+      type: object
+      required:
+      - id
+      - delay
+      title: AidDelay
+      description: Properties related to CASEVAC or MEDEVAC
+    AidTypeEnum:
+      type: string
+      enum:
+      - air
+      - ground
+      - water
+      - unknown
+      title: AidTypeEnum
+      description: Means of evacuation
+    AirQualityEnum:
+      type: string
+      enum:
+      - green
+      - yellow
+      - orange
+      - red
+      - purple
+      - maroon
+      title: AirQualityEnum
+      description: Air Quality Index (AQI); see [airnow.gov](https://www.airnow.gov/aqi/aqi-basics/)
     AlignmentResults:
-      title: AlignmentResults
+      properties:
+        alignment_source:
+          items:
+            "$ref": "#/components/schemas/AlignmentSource"
+          type: array
+          title: Alignment Source
+        alignment_target_id:
+          type: string
+          title: Alignment Target Id
+          description: ID of desired profile to align responses to.
+        score:
+          type: number
+          maximum: 1
+          minimum: 0
+          title: Score
+          desc: Measured alignment, 0 (completely unaligned) - 1 (completely aligned).
+        kdma_values:
+          items:
+            "$ref": "#/components/schemas/KDMA"
+          type: array
+          title: Kdma Values
+          description: Computed KDMA profile from results
+      additionalProperties: false
+      type: object
       required:
       - alignment_source
       - alignment_target_id
       - score
       - kdma_values
-      type: object
-      properties:
-        alignment_source:
-          title: Alignment Source
-          type: array
-          items:
-            "$ref": "#/components/schemas/AlignmentSource"
-        alignment_target_id:
-          title: Alignment Target Id
-          type: string
-          description: ID of desired profile to align responses to.
-        score:
-          title: Score
-          maximum: 1
-          minimum: 0
-          type: number
-          description: Measured alignment, 0 (completely unaligned) - 1 (completely aligned).
-        kdma_values:
-          title: Kdma Values
-          type: array
-          items:
-            "$ref": "#/components/schemas/KDMA"
-          description: Computed KDMA profile from results
+      title: AlignmentResults
       description: Computed KDMA profile and alignment score for a set of decisions.
     AlignmentSource:
-      title: AlignmentSource
+      properties:
+        scenario_id:
+          type: string
+          title: Scenario Id
+          description: Unique ID for user session.
+        probes:
+          items:
+            type: string
+          type: array
+          title: Probes
+          description: List of ID's of probes used to compute alignment.
+      additionalProperties: false
+      type: object
       required:
       - scenario_id
       - probes
-      type: object
-      properties:
-        scenario_id:
-          title: Scenario Id
-          type: string
-          description: Unique ID for user session.
-        probes:
-          title: Probes
-          type: array
-          items:
-            type: string
-          description: List of ID's of probes used to compute alignment.
+      title: AlignmentSource
       description: |-
         Describes which session/probe responses were used to
         compute an alignment score, allowing for lots
         of flexibility.
     AlignmentTarget:
-      title: AlignmentTarget
-      required:
-      - id
-      - kdma_values
-      type: object
       properties:
         id:
-          title: Id
           type: string
+          title: Id
           description: Globally unique ID for profile
-        kdma_values:
-          title: Kdma Values
-          type: array
+        kdmas:
           items:
             "$ref": "#/components/schemas/KDMA"
-      description: Desired profile of KDMA values for an algorithmic decision maker
-        to align to.
-    Casualty:
-      title: Casualty
+          type: array
+          title: Kdmas
+          description: kdmas for target
+      additionalProperties: false
+      type: object
       required:
       - id
-      - unstructured
-      - demographics
-      - vitals
-      type: object
+      - kdmas
+      title: AlignmentTarget
+      description: Desired profile of KDMA values for an algorithmic decision maker
+        to align to.
+    AmbientNoiseEnum:
+      type: string
+      enum:
+      - none
+      - quiet
+      - normal
+      - noisy
+      - extreme
+      title: AmbientNoiseEnum
+      description: Descriptor for background noise level
+    AvpuLevelEnum:
+      type: string
+      enum:
+      - ALERT
+      - VOICE
+      - PAIN
+      - UNRESPONSIVE
+      title: AvpuLevelEnum
+      description: Character level of response.  See [Levels of Response](https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response)
+        for details
+    BreathingLevelEnum:
+      type: string
+      enum:
+      - NORMAL
+      - FAST
+      - SLOW
+      - RESTRICTED
+      - NONE
+      title: BreathingLevelEnum
+      description: Descriptive breathing level
+    Character:
       properties:
         id:
+          type: string
           title: Id
+          description: A unique character ID throughout the scenario
+        name:
           type: string
-          description: Globally unique casualty identifier
+          title: Name
+          description: display name, as in a dashboard
         unstructured:
-          title: Unstructured
           type: string
-          description: Text description of casualty/injuries.
+          title: Unstructured
+          description: Natural language, plain text description of the character
+        unstructured_postassess:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Unstructured Postassess
+          description: unstructured description updated after character assessment
+        intent:
+          anyOf:
+          - "$ref": "#/components/schemas/IntentEnum"
+          - type: 'null'
+        directness_of_causality:
+          anyOf:
+          - "$ref": "#/components/schemas/DirectnessEnum"
+          - type: 'null'
+        rapport:
+          anyOf:
+          - "$ref": "#/components/schemas/RapportEnum"
+          - type: 'null'
         demographics:
-          "$ref": "#/components/schemas/DemographicInfo"
+          "$ref": "#/components/schemas/Demographics"
+        injuries:
+          anyOf:
+          - items:
+              "$ref": "#/components/schemas/Injury"
+            type: array
+          - type: 'null'
+          title: Injuries
+          description: A list of Injuries for the character
         vitals:
-          "$ref": "#/components/schemas/IndividualVitals"
-      description: Collection of information about an individual casualty.
-    DemographicInfo:
-      title: DemographicInfo
-      required:
-      - age
-      - sex
-      - rank
+          anyOf:
+          - "$ref": "#/components/schemas/Vitals"
+          - type: 'null'
+        visited:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Visited
+          description: whether or not this character has been visited by the ADM in
+            the current scenario
+          default: false
+        tag:
+          anyOf:
+          - "$ref": "#/components/schemas/CharacterTagEnum"
+          - type: 'null'
       type: object
+      required:
+      - id
+      - name
+      - unstructured
+      - demographics
+      title: Character
+      description: a character in the scene, including injured patients, civilians,
+        medics, etc.
+    CharacterRoleEnum:
+      type: string
+      enum:
+      - Infantry
+      - SEAL
+      - Command
+      - Intelligence
+      - Medical
+      - Specialist
+      - Communications
+      title: CharacterRoleEnum
+      description: The primary role a character has in the mission, in terms of the
+        skills they possess
+    CharacterTagEnum:
+      type: string
+      enum:
+      - MINIMAL
+      - DELAYED
+      - IMMEDIATE
+      - EXPECTANT
+      title: CharacterTagEnum
+      description: the tag assigned to a character
+    CivilianPresenceEnum:
+      type: string
+      enum:
+      - none
+      - limited
+      - some
+      - extensive
+      - crowd
+      title: CivilianPresenceEnum
+      description: Indicator of how many civilians are present in the mission
+    CommunicationCapabilityEnum:
+      type: string
+      enum:
+      - internal
+      - external
+      - both
+      - neither
+      title: CommunicationCapabilityEnum
+      description: current availability of internal and external communication
+    Conditions:
       properties:
-        age:
-          title: Age
-          type: integer
-          description: Age in years.
-        sex:
-          "$ref": "#/components/schemas/IndividualSex"
-        rank:
-          "$ref": "#/components/schemas/IndividualRank"
-      description: Demographic information about an individual.
-    Environment:
-      title: Environment
+        elapsed_time_lt:
+          anyOf:
+          - type: integer
+            minimum: 5
+          - type: 'null'
+          title: Elapsed Time Lt
+          description: True if the scenario elapsed time (in seconds) is less than
+            the specified value
+        elapsed_time_gt:
+          anyOf:
+          - type: integer
+            minimum: 5
+          - type: 'null'
+          title: Elapsed Time Gt
+          description: True if the scenario elapsed time (in seconds) is greater than
+            the specified value
+        actions:
+          anyOf:
+          - items:
+              items:
+                type: string
+              type: array
+            type: array
+          - type: 'null'
+          title: Actions
+          description: True if the any of the specified lists of actions have been
+            taken; multiple action ID lists have "or" semantics; multiple action IDs
+            within a list have "and" semantics
+        probes:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Probes
+          description: True if the specified list of probe_ids have been answered
+        probe_responses:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Probe Responses
+          description: True if the specified list of probe responses (choice) have
+            been sent
+        character_vitals:
+          anyOf:
+          - items:
+              "$ref": "#/components/schemas/ConditionsCharacterVitalsInner"
+            type: array
+          - type: 'null'
+          title: Character Vitals
+          description: True if the specified list of vitals values have been met for
+            the specified character_id
+        supplies:
+          anyOf:
+          - items:
+              "$ref": "#/components/schemas/Supplies"
+            type: array
+          - type: 'null'
+          title: Supplies
+          description: True if there are at least the specified quantity of the specified
+            supply types remaining
+      type: object
+      title: Conditions
+      description: Conditions that specify whether to transition to the next scene
+        or send a probe response
+    ConditionsCharacterVitalsInner:
+      properties:
+        character_id:
+          type: string
+          title: Character Id
+          description: The ID of the character in question
+        vitals:
+          "$ref": "#/components/schemas/Vitals"
+      type: object
+      required:
+      - character_id
+      - vitals
+      title: ConditionsCharacterVitalsInner
+      description: The minimum vitals of the specified character
+    DecisionEnvironment:
+      properties:
+        unstructured:
+          type: string
+          title: Unstructured
+          description: Natural language, plain text description of decision-impacting
+            environmental factors
+        aid_delay:
+          anyOf:
+          - items:
+              "$ref": "#/components/schemas/AidDelay"
+            type: array
+          - type: 'null'
+          title: Aid Delay
+          description: A list of evacuation opportunities
+        movement_restriction:
+          anyOf:
+          - "$ref": "#/components/schemas/MovementRestrictionEnum"
+          - type: 'null'
+        sound_restriction:
+          anyOf:
+          - "$ref": "#/components/schemas/SoundRestrictionEnum"
+          - type: 'null'
+        oxygen_levels:
+          anyOf:
+          - "$ref": "#/components/schemas/OxygenLevelsEnum"
+          - type: 'null'
+        population_density:
+          anyOf:
+          - "$ref": "#/components/schemas/PopulationDensityEnum"
+          - type: 'null'
+        injury_triggers:
+          anyOf:
+          - "$ref": "#/components/schemas/InjuryTriggerEnum"
+          - type: 'null'
+        air_quality:
+          anyOf:
+          - "$ref": "#/components/schemas/AirQualityEnum"
+          - type: 'null'
+        city_infrastructure:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: City Infrastructure
+          description: Refers to building/city infrastructure that should be noted
+            and known (safe house, etc.)
+      type: object
       required:
       - unstructured
-      - aidDelay
-      type: object
-      properties:
-        unstructured:
-          title: Unstructured
-          type: string
-          description: Text description of environment.
-        aidDelay:
-          title: Aiddelay
-          minimum: 0
-          type: number
-          description: Time in minutes until evac, reinforcements, extra supplydelivery,
-            etc.
-      description: Information about location, environment, etc.
-    HTTPValidationError:
-      title: HTTPValidationError
-      type: object
-      properties:
-        detail:
-          title: Detail
-          type: array
-          items:
-            "$ref": "#/components/schemas/ValidationError"
-    IndividualRank:
-      title: IndividualRank
-      enum:
-      - Civilian
-      - Military
-      - VIP
+      title: DecisionEnvironment
+      description: Environmental elements that impact decision-making
+    DemographicSexEnum:
       type: string
-      description: Describes an individual's rank or importance to a given mission.
-    IndividualSex:
-      title: IndividualSex
       enum:
       - M
       - F
-      type: string
-      description: Sex of individual assigned at birth.
-    IndividualVitals:
-      title: IndividualVitals
-      type: object
+      - Unknown
+      title: DemographicSexEnum
+      description: the sex of the character
+    Demographics:
       properties:
-        hrpmin:
-          title: Hrpmin
-          minimum: 0
-          type: integer
-          description: heart rate, beats per minute
-        mmHg:
-          title: Mmhg
-          minimum: 0
-          type: integer
-          description: blood pressure, mmHg
-        Spo2:
-          title: Spo2
-          minimum: 0
-          type: integer
-          description: Blood oxygen percent
-        RR:
-          title: Rr
-          minimum: 0
-          type: integer
-          description: Respiration rate, breaths/min
-        Pain:
-          title: Pain
-          maximum: 10
-          minimum: 0
-          type: integer
-          description: Pain, 0 (no pain) - 10 (max pain)
-      description: |-
-        Vitals for an individual determined from Triage. Fields are optional as it
-        might not be possible to always collect this information.
-    KDMA:
-      title: KDMA
+        age:
+          anyOf:
+          - type: integer
+            maximum: 125
+            minimum: 0
+          - type: 'null'
+          title: Age
+          description: the age of the character, omit if unknown
+        sex:
+          "$ref": "#/components/schemas/DemographicSexEnum"
+        race:
+          "$ref": "#/components/schemas/RaceEnum"
+        military_disposition:
+          anyOf:
+          - "$ref": "#/components/schemas/MilitaryDispositionEnum"
+          - type: 'null'
+        military_branch:
+          anyOf:
+          - "$ref": "#/components/schemas/MilitaryBranchEnum"
+          - type: 'null'
+        rank:
+          anyOf:
+          - "$ref": "#/components/schemas/MilitaryRankEnum"
+          - type: 'null'
+        rank_title:
+          anyOf:
+          - "$ref": "#/components/schemas/MilitaryRankTitleEnum"
+          - type: 'null'
+        skills:
+          anyOf:
+          - items:
+              "$ref": "#/components/schemas/Skills"
+            type: array
+          - type: 'null'
+          title: Skills
+          description: A list of pairs of skill type and descriptive skill level
+        role:
+          anyOf:
+          - "$ref": "#/components/schemas/CharacterRoleEnum"
+          - type: 'null'
+        mission_importance:
+          anyOf:
+          - "$ref": "#/components/schemas/MissionImportanceEnum"
+          - type: 'null'
+      type: object
       required:
-      - kdma
-      - value
-      type: object
-      properties:
-        kdma:
-          "$ref": "#/components/schemas/KDMA_name"
-        value:
-          title: Value
-          maximum: 10
-          minimum: 0
-          type: number
-      description: Single KDMA value with values between 0 and 10
-    KDMA_name:
-      title: KDMA_name
-      enum:
-      - denial
-      - mission
-      - Knowledge
+      - sex
+      - race
+      title: Demographics
+      description: Basic properties about the character
+    DirectnessEnum:
       type: string
-      description: Possible KDMA names.
+      enum:
+      - direct
+      - somewhat direct
+      - somewhat indirect
+      - indirect
+      - none
+      title: DirectnessEnum
+      description: How directly a character is responsible for injury
+    Environment:
+      properties:
+        sim_environment:
+          "$ref": "#/components/schemas/SimEnvironment"
+        decision_environment:
+          anyOf:
+          - "$ref": "#/components/schemas/DecisionEnvironment"
+          - type: 'null'
+      type: object
+      required:
+      - sim_environment
+      title: Environment
+      description: Environmental parameters that impact either decision-making, the
+        simulation environment, or both
+    FaunaTypeEnum:
+      type: string
+      enum:
+      - none
+      - limited
+      - normal
+      - high
+      - pervasive
+      title: FaunaTypeEnum
+      description: Descriptor of local animal/insect activity
+    FloraTypeEnum:
+      type: string
+      enum:
+      - none
+      - limited
+      - normal
+      - lush
+      - extensive
+      title: FloraTypeEnum
+      description: Descriptor of local vegetation.
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            "$ref": "#/components/schemas/ValidationError"
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    HeartRateEnum:
+      type: string
+      enum:
+      - NONE
+      - FAINT
+      - NORMAL
+      - FAST
+      title: HeartRateEnum
+      description: Descriptive heart rate
+    Injury:
+      properties:
+        name:
+          "$ref": "#/components/schemas/InjuryTypeEnum"
+        location:
+          "$ref": "#/components/schemas/InjuryLocationEnum"
+        severity:
+          anyOf:
+          - "$ref": "#/components/schemas/InjurySeverityEnum"
+          - type: 'null'
+        status:
+          "$ref": "#/components/schemas/InjuryStatusEnum"
+        source_character:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source Character
+          description: The character id of the person responsible for the injury,
+            subject to the character's `directness_of_causality`
+      type: object
+      required:
+      - name
+      - location
+      - status
+      title: Injury
+      description: An injury on a character.
+    InjuryLocationEnum:
+      type: string
+      enum:
+      - right forearm
+      - left forearm
+      - right calf
+      - left calf
+      - right thigh
+      - left thigh
+      - right stomach
+      - left stomach
+      - right bicep
+      - left bicep
+      - right shoulder
+      - left shoulder
+      - right side
+      - left side
+      - right chest
+      - left chest
+      - right wrist
+      - left wrist
+      - left face
+      - right face
+      - left neck
+      - right neck
+      - internal
+      - unspecified
+      title: InjuryLocationEnum
+      description: the injury location on the character's body
+    InjurySeverityEnum:
+      type: string
+      enum:
+      - minor
+      - moderate
+      - substantial
+      - major
+      - extreme
+      title: InjurySeverityEnum
+      description: The severity of the injury; for revelant injuries, impacts blood
+        pool sizes
+    InjuryStatusEnum:
+      type: string
+      enum:
+      - hidden
+      - discoverable
+      - visible
+      - discovered
+      - treated
+      title: InjuryStatusEnum
+      description: Whether the injury is known prior- and post-assessment, and whether
+        it's been treated
+    InjuryTriggerEnum:
+      type: string
+      enum:
+      - explosion
+      - firearm
+      - fall
+      - fight
+      - pathogen
+      - poison
+      - animal
+      - plant
+      - water
+      - collision
+      - electrical
+      - equipment
+      - attack
+      - fire
+      - stress
+      - chemical
+      title: InjuryTriggerEnum
+      description: What source caused character injuries
+    InjuryTypeEnum:
+      type: string
+      enum:
+      - Ear Bleed
+      - Asthmatic
+      - Laceration
+      - Puncture
+      - Shrapnel
+      - Chest Collapse
+      - Amputation
+      - Burn
+      - Abrasion
+      - Broken Bone
+      - Internal
+      title: InjuryTypeEnum
+      description: A brief but descriptive label for the injury type
+    IntentEnum:
+      type: string
+      enum:
+      - intend major harm
+      - intend minor harm
+      - no intent
+      - intend minor help
+      - intend major help
+      title: IntentEnum
+      description: The intent of the character
+    KDMA:
+      properties:
+        name:
+          allOf:
+          - "$ref": "#/components/schemas/KDMAId"
+          description: Name of KDMA.
+        value:
+          type: number
+          maximum: 1
+          minimum: 0
+          title: Value
+          description: Numeric score for a given KDMA, 0-1 scale.
+      additionalProperties: false
+      type: object
+      required:
+      - name
+      - value
+      title: KDMA
+      description: Single KDMA value with values between 0 and 1
+    KDMAId:
+      type: string
+      enum:
+      - maximization
+      - RiskTolerance
+      - NegativeUrgency
+      - AmbiguityTolerance
+      - Satisficing
+      - DenyCare
+      - MissionSuccess
+      - DeviatePolicy
+      - DeviateStandards
+      - QualityOfLife
+      - TraitBias
+      - Frugality
+      title: KDMAId
+      description: KDMA Identifier Strings
+    LightingTypeEnum:
+      type: string
+      enum:
+      - none
+      - limited
+      - normal
+      - bright
+      - flashing
+      title: LightingTypeEnum
+      description: Descriptor of available natural or man-made lighting
+    MentalStatusEnum:
+      type: string
+      enum:
+      - AGONY
+      - CALM
+      - CONFUSED
+      - SHOCK
+      - UPSET
+      - UNRESPONSIVE
+      title: MentalStatusEnum
+      description: Character mental status, which impacts interaction in the sim environment
+    MilitaryBranchEnum:
+      type: string
+      enum:
+      - US Army
+      - US Navy
+      - US Air Force
+      - US Marine Corps
+      - US Space Force
+      - US Coast Guard
+      title: MilitaryBranchEnum
+      description: Branch of the US military.
+    MilitaryDispositionEnum:
+      type: string
+      enum:
+      - Allied US
+      - Allied
+      - Civilian
+      - Military Adversary
+      - Military Neutral
+      - Non-Military Adversary
+      title: MilitaryDispositionEnum
+      description: How the character is to be treated in a military context
+    MilitaryRankEnum:
+      type: string
+      enum:
+      - E-1
+      - E-2
+      - E-3
+      - E-4
+      - E-5
+      - E-6
+      - E-7
+      - E-8
+      - E-9
+      - E-9 (special)
+      - W-1
+      - W-2
+      - W-3
+      - W-4
+      - W-5
+      - O-1
+      - O-2
+      - O-3
+      - O-4
+      - O-5
+      - O-6
+      - O-7
+      - O-8
+      - O-9
+      - O-10
+      - Special
+      - Special (Navy)
+      - Special (Coast Guard)
+      title: MilitaryRankEnum
+      description: the cross-branch military rank (paygrade)
+    MilitaryRankTitleEnum:
+      type: string
+      enum:
+      - Private (Recruit)
+      - Private
+      - Private First Class
+      - Specialist
+      - Corporal
+      - Sergeant
+      - Staff Sergeant
+      - Sergeant First Class
+      - Master Sergeant
+      - First Sergeant
+      - Sergeant Major
+      - Command Sergeant Major
+      - Sergeant Major of the Army
+      - Warrant Officer 1
+      - Chief Warrant Officer 2
+      - Chief Warrant Officer 3
+      - Chief Warrant Officer 4
+      - Chief Warrant Officer 5
+      - 2nd Lieutenant
+      - 1st Lieutenant
+      - Lieutenant
+      - Captain
+      - Major
+      - Lieutenant Colonel
+      - Colonel
+      - Brigadier General
+      - Major General
+      - Lieutenant General
+      - Army Chief of Staff (special)
+      - General
+      - Airman Basic
+      - Airman
+      - Airman First Class
+      - Senior Airman
+      - Technical Sergeant
+      - Senior Master Sergeant
+      - First Sergeant / Chief Master Sergeant
+      - Chief Master Sergeant of the Air Force
+      - Air Force Chief of Staff (special)
+      - Seaman Recruit
+      - Seaman Apprentice
+      - Seaman
+      - Petty Officer Third Class
+      - Petty Officer Second Class
+      - Petty Officer First Class
+      - Chief Petty Officer
+      - Senior Chief Petty Officer
+      - Master Chief Petty Officer
+      - Master Chief Petty Officer of the Navy
+      - Master Chief Petty Officer of the Coast Guard
+      - Chief Warrant Officer
+      - Ensign
+      - Lieutenant, Junior Grade
+      - Lieutenant Commander
+      - Commander
+      - Rear Admiral (Lower Half)
+      - Rear Admiral (Upper Half)
+      - Vice Admiral
+      - Chief of Naval Operations (special)
+      - Commandant of the Coast Guard (special)
+      - Admiral
+      - Lance Corporal
+      - Gunnery Sergeant
+      - Master Gunnery Sergeant
+      - Sergeant Major of the Marine Corps
+      - Warrant Officer
+      - Commandant of the Marine Corps
+      - Specialist 1
+      - Specialist 2
+      - Specialist 3
+      - Specialist 4
+      - Chief Master Sergeant
+      - Chief Master Sergeant of the Space Force
+      - Chief of Space Operations
+      title: MilitaryRankTitleEnum
+      description: the branch-specific military rank
     Mission:
-      title: Mission
+      properties:
+        unstructured:
+          type: string
+          title: Unstructured
+          description: natural language description of current mission
+        mission_type:
+          "$ref": "#/components/schemas/MissionTypeEnum"
+        character_importance:
+          anyOf:
+          - items:
+              additionalProperties:
+                "$ref": "#/components/schemas/MissionImportanceEnum"
+              type: object
+            type: array
+          - type: 'null'
+          title: Character Importance
+          description: A list of pairs of character ids with an indicator of how mission-critical
+            the character is
+        civilian_presence:
+          anyOf:
+          - "$ref": "#/components/schemas/CivilianPresenceEnum"
+          - type: 'null'
+        communication_capability:
+          anyOf:
+          - "$ref": "#/components/schemas/CommunicationCapabilityEnum"
+          - type: 'null'
+        roe:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Roe
+          description: rules of engagement to inform decision-making, but not to restrict
+            decision space
+        political_climate:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Political Climate
+          description: The political climate in a mission to inform decision-making
+        medical_policies:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Medical Policies
+          description: Medical policies in effect in a mission, to inform decision-making
+      type: object
       required:
       - unstructured
       - mission_type
-      type: object
-      properties:
-        unstructured:
-          title: Unstructured
-          type: string
-          description: Text description of state.
-        mission_type:
-          allOf:
-          - "$ref": "#/components/schemas/MissionType"
-          description: Mission objective
-      description: Text description of mission, and enum mission type.
-    MissionType:
-      title: MissionType
-      enum:
-      - ProtectMVP
-      - DeliverCargo
-      - DefendBase
-      - ProtectCivilians
-      - Other
+      title: Mission
+      description: Mission parameters that impact decision-making
+    MissionImportanceEnum:
       type: string
-      description: Enumeration over different mission objectives.
-    Probe:
-      title: Probe
-      required:
-      - id
-      - type
-      - prompt
-      - state
-      - options
-      type: object
+      enum:
+      - low
+      - normal
+      - important
+      - priority
+      - vip
+      title: MissionImportanceEnum
+      description: How important the character is to the mission
+    MissionTypeEnum:
+      type: string
+      enum:
+      - Attack
+      - Defend
+      - Delay
+      - Patrol
+      - Reconnaissance
+      - Ambush
+      - Listening/Observation
+      - Direct Action
+      - Hostage rescue
+      - Asset transport
+      - Sensor emplacement
+      - Intelligence gathering
+      - Civil affairs
+      - Training
+      - Sabotage
+      - Security patrol
+      - Fire support
+      - Nuclear deterrence
+      - Extraction
+      - Unknown
+      title: MissionTypeEnum
+      description: enumeration of possible mission types
+    MovementRestrictionEnum:
+      type: string
+      enum:
+      - unrestricted
+      - minimal
+      - moderate
+      - severe
+      - extreme
+      title: MovementRestrictionEnum
+      description: Operational movement restrictions due to any factor including terrain,
+        weather, enemy activity, etc.
+    OxygenLevelsEnum:
+      type: string
+      enum:
+      - normal
+      - limited
+      - scarce
+      - none
+      title: OxygenLevelsEnum
+      description: Oxygen levels due to any factor that may impact decision-making
+    PeakNoiseEnum:
+      type: string
+      enum:
+      - none
+      - quiet
+      - normal
+      - noisy
+      - extreme
+      title: PeakNoiseEnum
+      description: Descriptor for peak noise level due to gunfire, vehicles, helicopters,
+        etc.
+    PopulationDensityEnum:
+      type: string
+      enum:
+      - none
+      - sparse
+      - some
+      - busy
+      - crowded
+      - very crowded
+      - extreme
+      title: PopulationDensityEnum
+      description: persons per square meter, each successive term is one more person
+        per square meter
+    ProbeConfig:
       properties:
-        id:
-          title: Id
-          type: string
-          description: Globally unique probe ID
-        type:
-          "$ref": "#/components/schemas/ProbeType"
-        prompt:
-          title: Prompt
-          type: string
-          description: Question being asked to decision maker during probe.
-        state:
-          title: State
+        probe_id:
           anyOf:
-          - "$ref": "#/components/schemas/State"
-          - type: object
-        options:
-          title: Options
-          type: array
-          items:
-            "$ref": "#/components/schemas/ProbeChoice"
-      description: Individual prompt that a decision maker must respond to.
-    ProbeChoice:
-      title: ProbeChoice
-      required:
-      - id
-      - value
+          - type: string
+          - type: 'null'
+          title: Probe Id
+          description: A valid probe_id from the appropriate TA1
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+          description: A description of the probe for use by TA1
       type: object
+      title: ProbeConfig
+      description: Probe configuration for use by TA1
+    ProbeResponse:
       properties:
-        id:
-          title: Id
+        session_id:
           type: string
-          description: Globally unique ID for choice
-        value:
-          title: Value
+          title: Session Id
+          description: Unique ID for user session.
+        response:
+          allOf:
+          - "$ref": "#/components/schemas/Response"
+          description: The response
+      additionalProperties: false
+      type: object
+      required:
+      - session_id
+      - response
+      title: ProbeResponse
+      description: Response to an individual probe.
+    ProbeResponses:
+      properties:
+        character_id:
           type: string
-          description: Text description of decision.
+          title: Character Id
+          description: A valid character ID from the scene
+        probe_id:
+          type: string
+          title: Probe Id
+          description: A valid probe_id from the appropriate TA1
+        minimal:
+          type: string
+          title: Minimal
+          description: The probe response to send for a MINIMAL tag
+        delayed:
+          type: string
+          title: Delayed
+          description: The probe response to send for a DELAYED tag
+        immediate:
+          type: string
+          title: Immediate
+          description: The probe response to send for a IMMEDIATE tag
+        expectant:
+          type: string
+          title: Expectant
+          description: The probe response to send for a EXPECTANT tag
+      type: object
+      required:
+      - character_id
+      - probe_id
+      - minimal
+      - delayed
+      - immediate
+      - expectant
+      title: ProbeResponses
+      description: tag-specific probe responses (choices) for a tagged character
+    RaceEnum:
+      type: string
+      enum:
+      - American Indian
+      - White
+      - Hispanic
+      - Black
+      - Asian
+      - Pacific Islander
+      title: RaceEnum
+      description: Race or ethnicity
+    RapportEnum:
+      type: string
+      enum:
+      - loathing
+      - dislike
+      - neutral
+      - close
+      - familial
+      title: RapportEnum
+      description: A measure of closeness or affinity towards the player/medic
     Response:
-      title: Response
+      properties:
+        scenario_id:
+          type: string
+          title: Scenario Id
+          description: Unique ID for scenario.
+        probe_id:
+          type: string
+          title: Probe Id
+          description: ID of probe that response is for
+        choice:
+          type: string
+          title: Choice
+          description: string ID of choice made, or, for ordering problems, comma-separated
+            string ofid's of ordered choices.
+        justification:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Justification
+          description: Optional free text justification of response to provide additional
+            context.
+      additionalProperties: false
+      type: object
       required:
       - scenario_id
       - probe_id
       - choice
-      type: object
-      properties:
-        scenario_id:
-          title: Scenario Id
-          type: string
-          description: Unique ID for scenario.
-        probe_id:
-          title: Probe Id
-          type: string
-          description: ID of probe that response is for
-        choice:
-          title: Choice
-          type: string
-          description: string ID of choice made, or, for ordering problems, comma-separated
-            string ofid's of ordered choices.
-        justification:
-          title: Justification
-          type: string
-          description: Optional free text justification of response to provide additional
-            context.
-      description: Response to an individual probe.
-    ProbeResponse:
-      title: ProbeResponse
-      required:
-      - session_id
-      - response
-      type: object
-      properties:
-        session_id:
-          title: Session Id
-          type: string
-          description: Unique ID for user session.
-        response:
-          "$ref": "#/components/schemas/Response"
-      description: Response to multiple probes sent together.
-    ProbeResponseBatch:
-      title: ProbeResponseBatch
-      required:
-      - session_id
-      - responses
-      type: object
-      properties:
-        session_id:
-          title: Session Id
-          type: string
-          description: Unique ID for user session.
-        responses:
-          title: Responses
-          type: array
-          items:
-            "$ref": "#/components/schemas/Response"
-          description: string IDs of scenario that response is for
-      description: Response to multiple probes sent together.
-    ProbeType:
-      title: ProbeType
-      enum:
-      - MultipleChoice
-      - FreeResponse
-      - PatientOrdering
-      type: string
-      description: Describes the type of probe being asked (multiple choice, patient
-        ordering, etc)
+      title: Response
+      description: |-
+        Response to a single probe.
+        Contains probe id, choice id, and optional justification of response.
     Scenario:
-      title: Scenario
-      required:
-      - id
-      - state
-      - probes
-      type: object
       properties:
-        name:
-          title: Name
-          type: string
-          description: Human-readable scenario name, not necessarily unique
         id:
-          title: Id
           type: string
-          description: globally unique id for scenario
+          title: Id
+          description: a globally unique id for the scenario
+        name:
+          type: string
+          title: Name
+          description: human-readable scenario name, not necessarily unique
+        session_complete:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Session Complete
+          description: set to true if the session is complete; that is, there are
+            no more scenarios
         state:
           "$ref": "#/components/schemas/State"
-        probes:
-          title: Probes
-          type: array
-          items:
-            "$ref": "#/components/schemas/Probe"
-      description: Fixed information about a scenario
-    State:
-      title: State
-      required:
-      - unstructured
-      - mission
-      - environment
-      - threat_state
-      - supplies
-      - casualties
+        scenes:
+          anyOf:
+          - items:
+              "$ref": "#/components/schemas/Scene"
+            type: array
+          - type: 'null'
+          title: Scenes
+          description: A list of specification for all scenes in the scenario
       type: object
+      required:
+      - id
+      - name
+      - state
+      title: Scenario
+      description: a triage scenario requiring decisions by a medic
+    Scene:
+      properties:
+        index:
+          type: integer
+          minimum: 0
+          title: Index
+          description: The order the scene appears in the scenario
+        state:
+          anyOf:
+          - "$ref": "#/components/schemas/State"
+          - type: 'null'
+        end_scene_allowed:
+          type: boolean
+          title: End Scene Allowed
+          description: Whether ADMs can explicitly end the scene
+        probe_config:
+          anyOf:
+          - items:
+              "$ref": "#/components/schemas/ProbeConfig"
+            type: array
+          - type: 'null'
+          title: Probe Config
+          description: TA1-provided probe configuration, ignored by TA3
+        tagging:
+          anyOf:
+          - "$ref": "#/components/schemas/Tagging"
+          - type: 'null'
+        action_mapping:
+          items:
+            "$ref": "#/components/schemas/ActionMapping"
+          type: array
+          title: Action Mapping
+          description: List of actions with details of how those actions map to probe
+            responses
+        restricted_actions:
+          anyOf:
+          - items:
+              "$ref": "#/components/schemas/ActionTypeEnum"
+            type: array
+          - type: 'null'
+          title: Restricted Actions
+          description: List of actions that will be excluded from get_available_actions
+        transition_semantics:
+          anyOf:
+          - "$ref": "#/components/schemas/SemanticTypeEnum"
+          - type: 'null'
+        transitions:
+          anyOf:
+          - "$ref": "#/components/schemas/Conditions"
+          - type: 'null'
+      type: object
+      required:
+      - index
+      - end_scene_allowed
+      - action_mapping
+      title: Scene
+      description: the specification for a scene in the scenario
+    SemanticTypeEnum:
+      type: string
+      enum:
+      - and
+      - or
+      - not
+      title: SemanticTypeEnum
+      description: Whether transition or probe response conditions use and, or, or
+        not semantics
+    SimEnvironment:
       properties:
         unstructured:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Unstructured
+          description: Natural language, plain text description of the environment
+        type:
+          "$ref": "#/components/schemas/SimEnvironmentTypeEnum"
+        weather:
+          anyOf:
+          - "$ref": "#/components/schemas/WeatherTypeEnum"
+          - type: 'null'
+        terrain:
+          anyOf:
+          - "$ref": "#/components/schemas/TerrainTypeEnum"
+          - type: 'null'
+        flora:
+          anyOf:
+          - "$ref": "#/components/schemas/FloraTypeEnum"
+          - type: 'null'
+        fauna:
+          anyOf:
+          - "$ref": "#/components/schemas/FaunaTypeEnum"
+          - type: 'null'
+        temperature:
+          anyOf:
+          - type: number
+            maximum: 150
+            minimum: -75
+          - type: integer
+            maximum: 150
+            minimum: -75
+          - type: 'null'
+          title: Temperature
+          description: numerical temperature in degrees Fahrenheit
+        humidity:
+          anyOf:
+          - type: number
+            maximum: 100
+            minimum: 0
+          - type: integer
+            maximum: 100
+            minimum: 0
+          - type: 'null'
+          title: Humidity
+          description: Numerical relative humidity, in percentage
+        lighting:
+          anyOf:
+          - "$ref": "#/components/schemas/LightingTypeEnum"
+          - type: 'null'
+        visibility:
+          anyOf:
+          - "$ref": "#/components/schemas/VisibilityTypeEnum"
+          - type: 'null'
+        noise_ambient:
+          anyOf:
+          - "$ref": "#/components/schemas/AmbientNoiseEnum"
+          - type: 'null'
+        noise_peak:
+          anyOf:
+          - "$ref": "#/components/schemas/PeakNoiseEnum"
+          - type: 'null'
+      type: object
+      required:
+      - type
+      title: SimEnvironment
+      description: Environmental elements that impact simulation configuration
+    SimEnvironmentTypeEnum:
+      type: string
+      enum:
+      - jungle
+      - submarine
+      - urban
+      - desert
+      title: SimEnvironmentTypeEnum
+      description: Basic setting for the entire scenario
+    SkillLevelEnum:
+      type: string
+      enum:
+      - novice
+      - qualified
+      - competent
+      - skilled
+      - expert
+      title: SkillLevelEnum
+      description: the level of expertise the character has in the skill
+    SkillTypeEnum:
+      type: string
+      enum:
+      - Medical
+      - Combat
+      - Specialist
+      - Communications
+      - Command
+      title: SkillTypeEnum
+      description: the type of skill the character has
+    Skills:
+      properties:
+        skill_type:
+          "$ref": "#/components/schemas/SkillTypeEnum"
+        level:
+          "$ref": "#/components/schemas/SkillLevelEnum"
+      type: object
+      required:
+      - skill_type
+      - level
+      title: Skills
+      description: A skill possessed by a character at a certain level of proficiency
+    SoundRestrictionEnum:
+      type: string
+      enum:
+      - unrestricted
+      - minimal
+      - moderate
+      - severe
+      - extreme
+      title: SoundRestrictionEnum
+      description: Operational sound restrictions due to any factor
+    State:
+      properties:
+        unstructured:
           type: string
-          description: Text description of state
+          title: Unstructured
+          description: Natural language, plain text description of a scene's state
+        elapsed_time:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Elapsed Time
+          description: the simulated elapsed time (in seconds) since the scenario
+            started
+        scenario_complete:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Scenario Complete
+          description: set to true if the scenario is complete; subsequent calls involving
+            that scenario will return an error code
         mission:
-          "$ref": "#/components/schemas/Mission"
+          anyOf:
+          - "$ref": "#/components/schemas/Mission"
+          - type: 'null'
         environment:
           "$ref": "#/components/schemas/Environment"
         threat_state:
-          "$ref": "#/components/schemas/ThreatState"
+          anyOf:
+          - "$ref": "#/components/schemas/ThreatState"
+          - type: 'null'
         supplies:
+          items:
+            "$ref": "#/components/schemas/Supplies"
+          type: array
           title: Supplies
-          type: array
+          description: A list of supplies available to the medic
+        characters:
           items:
-            "$ref": "#/components/schemas/Supply"
-        casualties:
-          title: Casualties
+            "$ref": "#/components/schemas/Character"
           type: array
-          items:
-            "$ref": "#/components/schemas/Casualty"
-      description: |-
-        Describes current state of scenario, "including casualties, supplies,
-        environmental info, etc.
-    Supply:
-      title: Supply
+          title: Characters
+          description: A list of characters in the scene, including injured patients,
+            civilians, medics, etc.
+      type: object
+      required:
+      - unstructured
+      - environment
+      - supplies
+      - characters
+      title: State
+      description: the current tactical & environmental state of the scenario and
+        of its characters
+    Supplies:
+      properties:
+        type:
+          "$ref": "#/components/schemas/SupplyTypeEnum"
+        reusable:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Reusable
+          description: Whether or not item is consumable/reusable
+          default: false
+        quantity:
+          type: integer
+          maximum: 999
+          minimum: 0
+          title: Quantity
+          description: Number of items available in the medical bag
+      type: object
       required:
       - type
       - quantity
-      type: object
-      properties:
-        type:
-          "$ref": "#/components/schemas/SupplyType"
-        quantity:
-          title: Quantity
-          minimum: 0
-          type: integer
-          description: Quantity (count) of supply.
-      description: Type and quantity of currently available supplies.
-    SupplyType:
-      title: SupplyType
-      enum:
-      - IV kits
-      - Bags of Saline
-      - Fast Kit
-      - Junctional Tourniquets
-      - Combat Gauze
-      - CAT Tourniquets
-      - Pressure Dressings
-      - Bulky Dressings
-      - Over the Needle Catheters
-      - Vented Chest Seals
-      - Non-Vented Chest Seals
-      - Nasal Trumpet
-      - Oropharangeal-Airway
-      - Cric Kit
-      - Alcohol Swabs
+      title: Supplies
+      description: a single type of medical supply available to the medic
+    SupplyTypeEnum:
       type: string
-      description: Enum over possible supply types.
+      enum:
+      - Tourniquet
+      - Pressure bandage
+      - Hemostatic gauze
+      - Decompression Needle
+      - Nasopharyngeal airway
+      - Pulse Oximeter
+      - Blanket
+      - Epi Pen
+      - Vented Chest Seal
+      - Pain Medications
+      - Splint
+      - Blood
+      - IV Bag
+      - Burn Dressing
+      title: SupplyTypeEnum
+      description: an enumeration of available supply types
+    Tagging:
+      properties:
+        enabled:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Enabled
+          description: Whether tagging is enabled for the scene
+        repeatable:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Repeatable
+          description: Whether probe responses should be sent each time a new tag
+            is applied
+        probe_responses:
+          anyOf:
+          - items:
+              "$ref": "#/components/schemas/ProbeResponses"
+            type: array
+          - type: 'null'
+          title: Probe Responses
+          description: A list of probe responses to send TA1 for each character-tag
+            combination
+        reference:
+          anyOf:
+          - type: integer
+            minimum: 0
+          - type: 'null'
+          title: Reference
+          description: Re-use the tagging configuration from the specified scene index
+      type: object
+      title: Tagging
+      description: Scene-level tagging configuration
+    TerrainTypeEnum:
+      type: string
+      enum:
+      - jungle
+      - indoors
+      - urban
+      - dunes
+      - forest
+      - beach
+      - mountain
+      - plains
+      - hills
+      - swamp
+      - flat
+      - rough
+      - extreme
+      title: TerrainTypeEnum
+      description: Descriptor for the scenario terrain
     Threat:
-      title: Threat
+      properties:
+        threat_type:
+          "$ref": "#/components/schemas/ThreatTypeEnum"
+        severity:
+          "$ref": "#/components/schemas/ThreatSeverityEnum"
+      type: object
       required:
       - threat_type
       - severity
-      type: object
-      properties:
-        threat_type:
-          "$ref": "#/components/schemas/ThreatType"
-        severity:
-          title: Severity
-          maximum: 1
-          minimum: 0
-          type: number
-          description: Severity of threat, 0 (no threat) - 1 (max threat)
-      description: Type and severity of threat.
+      title: Threat
+      description: threats in the environment that could affect decision-making
+    ThreatSeverityEnum:
+      type: string
+      enum:
+      - low
+      - moderate
+      - substantial
+      - severe
+      - extreme
+      title: ThreatSeverityEnum
+      description: how dangerous and/or imminent the threat is
     ThreatState:
-      title: ThreatState
+      properties:
+        unstructured:
+          type: string
+          title: Unstructured
+          description: Natural language, plain text description of environmental threats
+        threats:
+          items:
+            "$ref": "#/components/schemas/Threat"
+          type: array
+          title: Threats
+          description: A list of pairs of threat types with a severity descriptor
+      type: object
       required:
       - unstructured
       - threats
-      type: object
-      properties:
-        unstructured:
-          title: Unstructured
-          type: string
-          description: Text description of current threats.
-        threats:
-          title: Threats
-          type: array
-          items:
-            "$ref": "#/components/schemas/Threat"
-      description: Text description of threats, and list of individual threats.
-    ThreatType:
-      title: ThreatType
-      enum:
-      - gunshots
-      - shelling
+      title: ThreatState
+      description: Description of the current threat to the characters, including
+        the medic
+    ThreatTypeEnum:
       type: string
-      description: Enum over different possible types of threats.
+      enum:
+      - Civil unrest
+      - Drone activity
+      - Extreme weather
+      - Fire
+      - Gunfire
+      - IED activity
+      - Mines
+      - Poisonous vegetation
+      - Predators
+      - Unknown
+      - Unstable structure
+      title: ThreatTypeEnum
+      description: the type or nature of the threat
     ValidationError:
-      title: ValidationError
-      required:
-      - loc
-      - msg
-      - type
-      type: object
       properties:
         loc:
-          title: Location
-          type: array
           items:
             anyOf:
             - type: string
             - type: integer
+          type: array
+          title: Location
         msg:
+          type: string
           title: Message
-          type: string
         type:
-          title: Error Type
           type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    VisibilityTypeEnum:
+      type: string
+      enum:
+      - none
+      - very low
+      - low
+      - moderate
+      - good
+      - excellent
+      title: VisibilityTypeEnum
+      description: Descriptor for operational visibility; affected by time of day,
+        lighting, weather, terrain, etc.
+    Vitals:
+      properties:
+        conscious:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Conscious
+          description: whether or not the character appears to be conscious
+        avpu:
+          anyOf:
+          - "$ref": "#/components/schemas/AvpuLevelEnum"
+          - type: 'null'
+        ambulatory:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Ambulatory
+          description: whether or not the character can walk
+        mental_status:
+          anyOf:
+          - "$ref": "#/components/schemas/MentalStatusEnum"
+          - type: 'null'
+        breathing:
+          anyOf:
+          - "$ref": "#/components/schemas/BreathingLevelEnum"
+          - type: 'null'
+        heart_rate:
+          anyOf:
+          - "$ref": "#/components/schemas/HeartRateEnum"
+          - type: 'null'
+        Spo2:
+          anyOf:
+          - type: number
+            maximum: 100
+            minimum: 0
+          - type: integer
+            maximum: 100
+            minimum: 0
+          - type: 'null'
+          title: Spo2
+          description: blood oxygen level (percentage)
+      type: object
+      title: Vitals
+      description: Vital levels and other indications of health
+    WeatherTypeEnum:
+      type: string
+      enum:
+      - clear
+      - wind
+      - clouds
+      - rain
+      - fog
+      - thunderstorm
+      - hail
+      - sleet
+      - snow
+      title: WeatherTypeEnum
+      description: Descriptor of the scenario weather
