@@ -271,6 +271,39 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/HTTPValidationError"
+  "/api/v1/session_alignment_graph":
+    get:
+      summary: Alignment Graph
+      operationId: alignment_graph_api_v1_session_alignment_graph_get
+      parameters:
+      - name: session_id
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Session Id
+      - name: target_id
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Target Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Response Alignment Graph Api V1 Session Alignment Graph Get
+        '404':
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
 components:
   schemas:
     ActionMapping:
