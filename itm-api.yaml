@@ -1047,7 +1047,7 @@ components:
       description: The intent of the character
     KDMA:
       properties:
-        name:
+        kdma:
           allOf:
           - "$ref": "#/components/schemas/KDMAId"
           description: Name of KDMA.
@@ -1060,7 +1060,7 @@ components:
       additionalProperties: false
       type: object
       required:
-      - name
+      - kdma
       - value
       title: KDMA
       description: Single KDMA value with values between 0 and 1
