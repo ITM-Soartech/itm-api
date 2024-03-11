@@ -513,7 +513,7 @@ components:
           type: string
           title: Id
           description: Globally unique ID for profile
-        kdmas:
+        kdmas_values:
           items:
             "$ref": "#/components/schemas/KDMA"
           type: array
@@ -523,7 +523,7 @@ components:
       type: object
       required:
       - id
-      - kdmas
+      - kdma_values
       title: AlignmentTarget
       description: Desired profile of KDMA values for an algorithmic decision maker
         to align to.
