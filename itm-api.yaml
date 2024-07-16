@@ -28,6 +28,31 @@ paths:
             text/html:
               schema:
                 type: string
+
+  "/api/v1/get_most_and_least_aligned":
+    get:
+      operationId: get_most_and_least_aligned_api_v1_get_most_and_least_aligned_get
+      parameters:
+      - in: query
+        name: session_id
+        required: true
+        schema:
+          title: Session Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlignmentMatchup'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Most And Least Aligned
   "/api/v1/new_session":
     post:
       summary: Post New Session Id
@@ -507,13 +532,38 @@ components:
         Describes which session/probe responses were used to
         compute an alignment score, allowing for lots
         of flexibility.
+    AlignmentMatchup:
+      additionalProperties: false
+      description: An object with IDs for the most and least aligned targets relative
+        to a session
+      properties:
+        least_aligned:
+          description: The alignment target with the lowest alignment to the given
+            session
+          title: Least Aligned
+          type: string
+        most_aligned:
+          description: The alignment target with the highest alignment to the given
+            session
+          title: Most Aligned
+          type: string
+        session_id:
+          description: The session ID used for comparison
+          title: Session Id
+          type: string
+      required:
+      - session_id
+      - most_aligned
+      - least_aligned
+      title: AlignmentMatchup
+      type: object
     AlignmentTarget:
       properties:
         id:
           type: string
           title: Id
           description: Globally unique ID for profile
-        kdmas:
+        kdma_values:
           items:
             "$ref": "#/components/schemas/KDMA"
           type: array
@@ -523,7 +573,7 @@ components:
       type: object
       required:
       - id
-      - kdmas
+      - kdma_values
       title: AlignmentTarget
       description: Desired profile of KDMA values for an algorithmic decision maker
         to align to.
@@ -1045,25 +1095,53 @@ components:
       - intend major help
       title: IntentEnum
       description: The intent of the character
-    KDMA:
+    KDEData:
+      additionalProperties: false
+      description: KDE and metadata
       properties:
+        kde:
+          description: sklearn.neighbors.KernelDensity serialized to base64 string
+          title: KDE
+          type: string
+        label:
+          description: Label for this KDE
+          title: Label
+          type: string
+      required:
+      - kde
+      - label
+      title: KDEData
+      type: object
+    KDMA:
+      additionalProperties: false
+      description: Single KDMA value with values between 0 and 1
+      properties:
+        kdes:
+          anyOf:
+          - additionalProperties:
+              $ref: '#/components/schemas/KDEData'
+            type: object
+          - type: 'null'
+          description: KDE Objects representing a KDMA Measurement
+          title: Kdes
         kdma:
           allOf:
-          - "$ref": "#/components/schemas/KDMAId"
+          - $ref: '#/components/schemas/KDMAId'
           description: Name of KDMA.
         value:
-          type: number
-          maximum: 1
-          minimum: 0
-          title: Value
+          anyOf:
+          - maximum: 1.0
+            minimum: 0.0
+            type: number
+          - type: 'null'
           description: Numeric score for a given KDMA, 0-1 scale.
-      additionalProperties: false
-      type: object
+          title: Value
       required:
       - kdma
       - value
+      - kdes
       title: KDMA
-      description: Single KDMA value with values between 0 and 1
+      type: object
     KDMAId:
       type: string
       enum:
