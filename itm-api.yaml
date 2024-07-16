@@ -1095,25 +1095,53 @@ components:
       - intend major help
       title: IntentEnum
       description: The intent of the character
-    KDMA:
+    KDEData:
+      additionalProperties: false
+      description: KDE and metadata
       properties:
+        kde:
+          description: sklearn.neighbors.KernelDensity serialized to base64 string
+          title: KDE
+          type: string
+        label:
+          description: Label for this KDE
+          title: Label
+          type: string
+      required:
+      - kde
+      - label
+      title: KDEData
+      type: object
+    KDMA:
+      additionalProperties: false
+      description: Single KDMA value with values between 0 and 1
+      properties:
+        kdes:
+          anyOf:
+          - additionalProperties:
+              $ref: '#/components/schemas/KDEData'
+            type: object
+          - type: 'null'
+          description: KDE Objects representing a KDMA Measurement
+          title: Kdes
         kdma:
           allOf:
-          - "$ref": "#/components/schemas/KDMAId"
+          - $ref: '#/components/schemas/KDMAId'
           description: Name of KDMA.
         value:
-          type: number
-          maximum: 1
-          minimum: 0
-          title: Value
+          anyOf:
+          - maximum: 1.0
+            minimum: 0.0
+            type: number
+          - type: 'null'
           description: Numeric score for a given KDMA, 0-1 scale.
-      additionalProperties: false
-      type: object
+          title: Value
       required:
       - kdma
       - value
+      - kdes
       title: KDMA
-      description: Single KDMA value with values between 0 and 1
+      type: object
     KDMAId:
       type: string
       enum:
