@@ -28,6 +28,31 @@ paths:
             text/html:
               schema:
                 type: string
+
+  "/api/v1/get_most_and_least_aligned":
+    get:
+      operationId: get_most_and_least_aligned_api_v1_get_most_and_least_aligned_get
+      parameters:
+      - in: query
+        name: session_id
+        required: true
+        schema:
+          title: Session Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlignmentMatchup'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Most And Least Aligned
   "/api/v1/new_session":
     post:
       summary: Post New Session Id
@@ -507,6 +532,31 @@ components:
         Describes which session/probe responses were used to
         compute an alignment score, allowing for lots
         of flexibility.
+    AlignmentMatchup:
+      additionalProperties: false
+      description: An object with IDs for the most and least aligned targets relative
+        to a session
+      properties:
+        least_aligned:
+          description: The alignment target with the lowest alignment to the given
+            session
+          title: Least Aligned
+          type: string
+        most_aligned:
+          description: The alignment target with the highest alignment to the given
+            session
+          title: Most Aligned
+          type: string
+        session_id:
+          description: The session ID used for comparison
+          title: Session Id
+          type: string
+      required:
+      - session_id
+      - most_aligned
+      - least_aligned
+      title: AlignmentMatchup
+      type: object
     AlignmentTarget:
       properties:
         id:
