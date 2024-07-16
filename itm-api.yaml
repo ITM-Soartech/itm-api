@@ -513,7 +513,7 @@ components:
           type: string
           title: Id
           description: Globally unique ID for profile
-        kdmas_values:
+        kdma_values:
           items:
             "$ref": "#/components/schemas/KDMA"
           type: array
